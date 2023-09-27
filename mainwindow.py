@@ -159,15 +159,42 @@ class MainAppWindow(tk.Tk):
 
 
 
+    # def delete_table(self):
+    #     selected = self.my_tree.focus()
+    #     tb_name = self.my_tree.item(selected)['values'][0]
+    #     conn = sqlite3.connect('tree_crm.db')
+    #     c = conn.cursor()
+    #     c.execute("DROP TABLE {}".format(tb_name))
+    #     conn.commit()
+    #     conn.close()
+    #     self.query_database_and_show()
+
     def delete_table(self):
         selected = self.my_tree.focus()
         tb_name = self.my_tree.item(selected)['values'][0]
+        
+        # Confirm with the user if they really want to delete
+        answer = tk.messagebox.askyesno("Delete Confirmation", f"Do you really want to delete {tb_name} table?")
+        
+        if not answer:
+            return
+
         conn = sqlite3.connect('tree_crm.db')
         c = conn.cursor()
-        c.execute("DROP TABLE {}".format(tb_name))
-        conn.commit()
-        conn.close()
-        self.query_database_and_show()
+
+        try:
+            # Delete the table
+            c.execute("DROP TABLE {}".format(tb_name))
+            # Remove the record from the Projects table
+            c.execute("DELETE FROM Projects WHERE ProjectName=?", (tb_name,))
+            conn.commit()
+            self.query_database_and_show()
+        except sqlite3.Error as e:
+            # Show error message
+            tk.messagebox.showerror("Error", f"Failed to delete {tb_name} table. Error: {e}")
+        finally:
+            conn.close()
+
 
     def setup_buttons(self):
         self.button_frame = LabelFrame(self, text="Commands")
