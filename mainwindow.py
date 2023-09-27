@@ -157,41 +157,39 @@ class MainAppWindow(tk.Tk):
         self.fn_entry.delete(0, END)
         self.query_database_and_show()
 
-
-
-    # def delete_table(self):
-    #     selected = self.my_tree.focus()
-    #     tb_name = self.my_tree.item(selected)['values'][0]
-    #     conn = sqlite3.connect('tree_crm.db')
-    #     c = conn.cursor()
-    #     c.execute("DROP TABLE {}".format(tb_name))
-    #     conn.commit()
-    #     conn.close()
-    #     self.query_database_and_show()
-
     def delete_table(self):
         selected = self.my_tree.focus()
         tb_name = self.my_tree.item(selected)['values'][0]
-        
-        # Confirm with the user if they really want to delete
-        answer = tk.messagebox.askyesno("Delete Confirmation", f"Do you really want to delete {tb_name} table?")
-        
-        if not answer:
-            return
 
         conn = sqlite3.connect('tree_crm.db')
         c = conn.cursor()
 
         try:
-            # Delete the table
-            c.execute("DROP TABLE {}".format(tb_name))
-            # Remove the record from the Projects table
+            print("Attempting to delete:", tb_name)  # Debugging
+
+            # Fetch all the SubProjectTableNames associated with the selected ProjectName
+            c.execute("SELECT SubProjectTableName FROM Projects WHERE ProjectName=?", (tb_name,))
+            subprojects = c.fetchall()
+            print(f"tb_name: {tb_name}")
+            print("Subprojects:", subprojects)  # Debugging
+
+            # Delete each sub-table
+            for subproject in subprojects:
+                subproject_table_name = subproject[0]
+                c.execute("DROP TABLE {}".format(subproject_table_name))
+                print(f"Deleted subproject table: {subproject_table_name}")  # Debugging
+
+            # Remove the records from the Projects table
             c.execute("DELETE FROM Projects WHERE ProjectName=?", (tb_name,))
+            print(f"Deleted project: {tb_name}")  # Debugging
+
             conn.commit()
             self.query_database_and_show()
+
         except sqlite3.Error as e:
             # Show error message
-            tk.messagebox.showerror("Error", f"Failed to delete {tb_name} table. Error: {e}")
+            tk.messagebox.showerror("Error", f"Failed to delete {tb_name} and its associated subprojects. Error: {e}")
+            print(f"Failed to delete {tb_name} and its associated subprojects. Error: {e}")
         finally:
             conn.close()
 
