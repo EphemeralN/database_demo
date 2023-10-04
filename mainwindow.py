@@ -167,21 +167,13 @@ class MainAppWindow(tk.Tk):
         try:
             print("Attempting to delete:", tb_name)  # Debugging
 
-            # Fetch all the SubProjectTableNames associated with the selected ProjectName
-            c.execute("SELECT SubProjectTableName FROM Projects WHERE ProjectName=?", (tb_name,))
-            subprojects = c.fetchall()
-            print(f"tb_name: {tb_name}")
-            print("Subprojects:", subprojects)  # Debugging
 
-            # Delete each sub-table
-            for subproject in subprojects:
-                subproject_table_name = subproject[0]
-                c.execute("DROP TABLE {}".format(subproject_table_name))
-                print(f"Deleted subproject table: {subproject_table_name}")  # Debugging
+            c.execute("DROP TABLE {}".format(tb_name))
+            print(f"Deleted subproject table: {tb_name}")  # Debugging
 
             # Remove the records from the Projects table
-            c.execute("DELETE FROM Projects WHERE ProjectName=?", (tb_name,))
-            print(f"Deleted project: {tb_name}")  # Debugging
+            c.execute("DELETE FROM Projects WHERE SubProjectTableName=?", (tb_name,))
+            print(f"Deleted subproject: {tb_name}")  # Debugging
 
             conn.commit()
             self.query_database_and_show()
