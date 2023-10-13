@@ -116,6 +116,8 @@ def open_window():
     # tb_name1 = my_tree.item(selected)['values']
     # print(tb_name1)
     project_name = my_tree.item(selected)['values'][0]
+    print("project_name")
+    print(project_name)
     # print(tb_name2)
 
     # window = MainAppWindow(root, tb_name2)
@@ -126,7 +128,7 @@ def open_window():
 def create_table():
     # Fetch the project name from the entry
     project_name = fn_entry.get()
-    subproject_table_name = project_name.replace(" ", "") + "_Table"  # Transforming "My Project" to "MyProject_Table"
+    subproject_table_name = project_name.replace(" ", "") + "_Default_Table"  # Transforming "My Project" to "MyProject_Table"
 
     # Connect to the database
     conn = sqlite3.connect('tree_crm.db')
@@ -134,6 +136,15 @@ def create_table():
 
     # Insert the new project into the Projects table
     c.execute("INSERT INTO Projects (ProjectName, SubProjectTableName) VALUES (?, ?)", (project_name, subproject_table_name))
+
+    # Create the new subproject table
+    c.execute(f"""CREATE TABLE IF NOT EXISTS {subproject_table_name} (
+                    id integer,
+                    address text,
+                    city text,
+                    state text,
+                    zipcode text)
+                """)
 
     # Commit changes
     conn.commit()
@@ -146,24 +157,60 @@ def create_table():
     query_database_and_show()
 
 
-def delete_table():
-    # Get the selected project name
-    selected = my_tree.focus()
-    project_name = my_tree.item(selected)['values'][0]
+# def delete_table():
+#     # Get the selected project name
+#     selected = my_tree.focus()
+#     project_name = my_tree.item(selected)['values'][0]
 
-    # Connect to the database
+#     # Connect to the database
+#     conn = sqlite3.connect('tree_crm.db')
+#     c = conn.cursor()
+
+#     # Delete the selected project from the Projects table
+#     c.execute("DELETE FROM Projects WHERE ProjectName=?", (project_name,))
+
+#     # Commit changes
+#     conn.commit()
+#     conn.close()
+
+#     # Refresh the treeview
+#     query_database_and_show()
+
+def delete_table():
+    selected = my_tree.focus()
+    tb_name = my_tree.item(selected)['values'][0]
+
     conn = sqlite3.connect('tree_crm.db')
     c = conn.cursor()
 
-    # Delete the selected project from the Projects table
-    c.execute("DELETE FROM Projects WHERE ProjectName=?", (project_name,))
+    try:
+        print("Attempting to delete:", tb_name)  # Debugging
 
-    # Commit changes
-    conn.commit()
-    conn.close()
+        # Fetch all the SubProjectTableNames associated with the selected ProjectName
+        c.execute("SELECT SubProjectTableName FROM Projects WHERE ProjectName=?", (tb_name,))
+        subprojects = c.fetchall()
+        print(f"tb_name: {tb_name}")
+        print("Subprojects:", subprojects)  # Debugging
 
-    # Refresh the treeview
-    query_database_and_show()
+        # Delete each sub-table
+        for subproject in subprojects:
+            subproject_table_name = subproject[0]
+            c.execute("DROP TABLE {}".format(subproject_table_name))
+            print(f"Deleted subproject table: {subproject_table_name}")  # Debugging
+
+        # Remove the records from the Projects table
+        c.execute("DELETE FROM Projects WHERE ProjectName=?", (tb_name,))
+        print(f"Deleted project: {tb_name}")  # Debugging
+
+        conn.commit()
+        query_database_and_show()
+
+    except sqlite3.Error as e:
+        # Show error message
+        tk.messagebox.showerror("Error", f"Failed to delete {tb_name} and its associated subprojects. Error: {e}")
+        print(f"Failed to delete {tb_name} and its associated subprojects. Error: {e}")
+    finally:
+        conn.close()
 
 
 
