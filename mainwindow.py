@@ -78,11 +78,13 @@ class MainAppWindow(tk.Tk):
         conn = sqlite3.connect('tree_crm.db')
         c = conn.cursor()
 
-        print("______project name " + self.project_name)
-        sql_query = """SELECT * FROM Projects WHERE ProjectName='{}';""".format(self.project_name)
+        # print("______project name " + self.project_name)
+        # sql_query = """SELECT * FROM Projects WHERE ProjectName='{}';""".format(self.project_name)
 
-        # sql_query = """SELECT * FROM Projects WHERE ProjectName=customers;""".replace("customers", self.project_name, 1)
-        c.execute(sql_query)
+        print("self.project_name")
+        print(self.project_name)
+        c.execute("SELECT * FROM Projects WHERE ProjectName=?", (self.project_name,))
+
         records = c.fetchall()
 
         print(records)
@@ -107,27 +109,6 @@ class MainAppWindow(tk.Tk):
         tb_name = self.my_tree.item(selected)['values'][0]
         print(tb_name)
         window = Window(self, 'tree_crm.db', tb_name)
-
-    # def create_table(self):
-    #     conn = sqlite3.connect('tree_crm.db')
-    #     c = conn.cursor()
-
-    #     query = """CREATE TABLE if not exists customers (
-    #                 id integer,
-    #                 address text,
-    #                 city text,
-    #                 state text,
-    #                 zipcode text)
-    #                 """
-    #     n_query = query.replace("customers", self.fn_entry.get())
-    #     c.execute(n_query)
-
-    #     conn.commit()
-    #     conn.close()
-
-    #     self.fn_entry.delete(0, END)
-    #     self.my_tree.delete(*self.my_tree.get_children())
-    #     self.query_database_and_show()
     
     def create_table(self):
         # Fetch the subproject table name from the entry

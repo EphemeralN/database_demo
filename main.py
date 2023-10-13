@@ -116,6 +116,8 @@ def open_window():
     # tb_name1 = my_tree.item(selected)['values']
     # print(tb_name1)
     project_name = my_tree.item(selected)['values'][0]
+    print("project_name")
+    print(project_name)
     # print(tb_name2)
 
     # window = MainAppWindow(root, tb_name2)
@@ -126,7 +128,7 @@ def open_window():
 def create_table():
     # Fetch the project name from the entry
     project_name = fn_entry.get()
-    subproject_table_name = project_name.replace(" ", "") + "_Table"  # Transforming "My Project" to "MyProject_Table"
+    subproject_table_name = project_name.replace(" ", "") + "_Default_Table"  # Transforming "My Project" to "MyProject_Table"
 
     # Connect to the database
     conn = sqlite3.connect('tree_crm.db')
@@ -134,6 +136,15 @@ def create_table():
 
     # Insert the new project into the Projects table
     c.execute("INSERT INTO Projects (ProjectName, SubProjectTableName) VALUES (?, ?)", (project_name, subproject_table_name))
+
+    # Create the new subproject table
+    c.execute(f"""CREATE TABLE IF NOT EXISTS {subproject_table_name} (
+                    id integer,
+                    address text,
+                    city text,
+                    state text,
+                    zipcode text)
+                """)
 
     # Commit changes
     conn.commit()
